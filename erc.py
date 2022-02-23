@@ -1,4 +1,5 @@
 # %%
+from itertools import permutations
 from pyexpat import model
 from matplotlib.pyplot import axis
 from sklearn.ensemble import RandomForestRegressor
@@ -60,3 +61,14 @@ for i, (train_index, test_index) in enumerate(kfold.split(X, y)):
         x_test = input(x_train, y_train, i)
 
         model.fit(x_train, y_train[:, ])
+
+# %%
+a = "3212323"
+
+
+def my_filter(temp):
+    if '33' not in ''.join(temp):
+        return temp
+
+
+filter(my_filter, (permutations(a)))
