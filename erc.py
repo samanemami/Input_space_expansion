@@ -12,9 +12,15 @@ X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=3)
 kfold = KFold(n_splits=2, shuffle=True)
 
 
-score_t1 = []
-score_t2 = []
-score_t3 = []
+score_x_t1 = []
+score_x_t2 = []
+score_x_t3 = []
+
+score_xy_t1 =[]
+score_xy1_t2 =[]
+score_xy1_t3 =[]
+
+
 
 for i, (train_index, test_index) in enumerate(kfold.split(X, y)):
     x_train, x_test = X[train_index], X[test_index]
@@ -22,14 +28,25 @@ for i, (train_index, test_index) in enumerate(kfold.split(X, y)):
 
     model = RandomForestRegressor()
     model.fit(x_train, y_train[:, 0])
-    score_t1.append(model.score(x_test, y_test[:, 0]))
+    score_x_t1.append(model.score(x_test, y_test[:, 0]))
 
     model.fit(x_train, y_train[:, 1])
-    score_t2.append(model.score(x_test, y_test[:, 1]))
+    score_x_t2.append(model.score(x_test, y_test[:, 1]))
 
     model.fit(x_train, y_train[:, 2])
-    score_t3.append(model.score(x_test, y_test[:, 2]))
+    score_x_t3.append(model.score(x_test, y_test[:, 2]))
 
+    # train the model by considering the output as an input
+    # Add the first output
+
+    x_train = np.append(x_train, y_train[:, 0][:, np.newaxis], axis=1)
+    model.fit(x_train, y_train[:, 1])
+    score_xy1_t2.append(model.score(x_test, y_test[:, 1]))
+    model.fit(x_train, y_train[:, 2])
+    score_xy1_t3.append(model.score(x_test, y_test[:, 2]))
+
+    
 # %%
-# np.column_stack((x_train, y_train[: 0]))
-y_train[:, 0].shape
+X = np.append(x_train, y_train[:, 0][:, np.newaxis], axis=1)
+# y_train[:, 0][:, np.newaxis].shape
+# x_train.shape
