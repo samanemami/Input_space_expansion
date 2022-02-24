@@ -49,19 +49,3 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
 
 
 # %%
-
-# scores = np.zeros((2, ((m-1) * m)))
-# scores = pd.DataFrame(scores)
-scores
-
-
-# %%
-
-X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=m)
-
-for i in range(0, y.shape[1], 1):
-    print('---------'+str(i)+'----------')
-    for j in range(0, y.shape[1], 1):
-
-        if i != j:
-            print(j)
