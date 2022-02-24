@@ -20,7 +20,7 @@ X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=m)
 kfold = KFold(n_splits=cv, shuffle=True)
 
 scores = np.zeros((2, ((m-1) * m)))
-scores = pd.DataFrame(scores)
+scores = pd.DataFrame(scores, columns=pd.RangeIndex(0, scores.shape[1], 1))
 
 for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
     x_train, x_test = X[train_index], X[test_index]
@@ -34,18 +34,19 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
         model.fit(x_train, y_train[:, i])
         score = model.score(x_test, y_test[:, i])
         scores.iloc[cv_, i] = score
-
+        mapping = {scores.columns[i]: 'target_'+str(i)}
+        scores = scores.rename(columns=mapping)
     # train the model by considering the output as
     # an input
 
-    for i in range(0, y_train.shape[1], 1):
-        x_train = input(x_train, y_train, i)
-        x_test = input(x_test, y_test, i)
-        for j in range(0, y_train.shape[1], 1):
-            if i != j:
-                model.fit(x_train, y_train[:, j])
-                score = model.score(x_test, y_test[:, j])
-                scores.iloc[cv_, i+y.shape[1]] = score
+    # for i in range(0, y_train.shape[1], 1):
+    #     x_train = input(x_train, y_train, i)
+    #     x_test = input(x_test, y_test, i)
+    #     for j in range(0, y_train.shape[1], 1):
+    #         if i != j:
+    #             model.fit(x_train, y_train[:, j])
+    #             score = model.score(x_test, y_test[:, j])
+    #             scores.iloc[cv_, i+y.shape[1]] = score
 
 
 # %%
