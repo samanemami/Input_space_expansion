@@ -1,14 +1,25 @@
-# %%
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
 import pandas as pd
 import numpy as np
-from sklearn import datasets as dts
-
-X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=m)
 
 
-def train_model(X:'s', y, cv, m):
+def train_model(X: np.array, y: np.array, cv: int, m: int) -> pd.DataFrame:
+    """
+
+    Parameters
+    X: ndarray or sparse matrix of shape (n_samples, n_features)
+
+    y: darray of shape (n_samples,)
+
+    cv: int value for the folds
+
+    m: number of targets
+
+    Returns:
+    Data Frame
+
+    """
 
     def input(X, y, i):
         X = np.append(X, y[:, i][:, np.newaxis], axis=1)
@@ -58,7 +69,3 @@ def train_model(X:'s', y, cv, m):
                     scores = scores.rename(columns=mapping)
                     col += 1
     scores.to_csv("score.csv", index=False)
-
-
-if __name__ == '__main__':
-    train_model()
