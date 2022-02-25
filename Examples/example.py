@@ -6,3 +6,4 @@ X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=m)
 
 if __name__ == '__main__':
     model(X=X, y=y, cv=2, m=m)
+

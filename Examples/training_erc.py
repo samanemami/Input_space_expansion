@@ -1,5 +1,7 @@
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
+import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
 import numpy as np
 
@@ -20,6 +22,11 @@ def train_model(X: np.array, y: np.array, cv: int, m: int) -> pd.DataFrame:
     Data Frame
 
     """
+
+    df = pd.DataFrame(y)
+    sns.heatmap(df.corr(method='pearson', min_periods=1), annot=True)
+    plt.title("Correlations")
+    plt.savefig("Correlations.jpg", dpi=500)
 
     def input(X, y, i):
         X = np.append(X, y[:, i][:, np.newaxis], axis=1)
