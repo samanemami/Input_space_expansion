@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn import datasets as dts
 from training_erc import train_model as model
-m = 5
+m = 10
 X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=m)
 
 
@@ -37,6 +37,13 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
         mapping = {scores.columns[i]: 'target_'+str(i)}
         scores = scores.rename(columns=mapping)
 
+
+
+
+    '''
+    Again, it is not correct as it needs to use x_trest
+    and y' as an input for prediction.
+    '''
     # train the model by considering the output as
     # an input
     i += 1
@@ -55,9 +62,8 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
         else:
             break
         cv_results = cross_val_score(estimator=model, X=X_train, y=Y_train,
-                                     cv=10, scoring='r2')
-        scores.iloc[:, i] = np.mean(cv_results)
+                                     cv=2, scoring='r2')
+        scores.iloc[cv_, i] = np.mean(cv_results)
         mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
         scores = scores.rename(columns=mapping)
         j += 1
-# %%
