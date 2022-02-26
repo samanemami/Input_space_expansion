@@ -1,4 +1,5 @@
 # %%
+from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
 import pandas as pd
@@ -63,36 +64,27 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
 # scores = scores.append(scores.mean(axis=0), ignore_index=True)
 # scores.to_csv(title + "_score.csv", index=False)
 # %%
+n_targest = 5
+scores = np.zeros((cv, n_targest))
+scores = pd.DataFrame(scores)
+
+
+cv_results = cross_val_score(estimator=model, X=x_train, y=y_train[:, 0],
+                                 cv=3, scoring='neg_mean_squared_error')
+
+scores.iloc[:, 0] = np.mean(cv_results)
 i = 0
+X_train = x_train
 while i < y_train.shape[1]:
-    x_train = input(x_train, y_train, i)
-    if i > y_train.shape[1]:
+    X_train = input(X_train, y_train, i)
+    if i+1 < y_train.shape[1]:
+        Y_train = y_train[:, i+1]
+    else:
         break
+    cv_results = cross_val_score(estimator=model, X=X_train, y=Y_train,
+                                 cv=3, scoring='neg_mean_squared_error')
+    scores.iloc[:, i+1] = np.mean(cv_results)
     i += 1
 # %%
-y_train.shape[1]
+scores
 
-
-# %%
-for i in range(y_train.shape[1]):
-    x_train = input(x_train, y_train, i)
-    y_train = y_train[:, ]
-
-
-# %%
-print(x_train.shape)
-for i in range(0, y_train.shape[1], 1):
-    for j in range(0, y_train.shape[1], 1):
-        if i != j:
-
-            x_train = input(x_train, y_train, i)
-            #
-            print(x_train.shape)
-
-            # scores.iloc[cv_, col] = score
-            # mapping = {
-            #     scores.columns[col]: 'X+target_'+str(i) + '|target_'+str(j)}
-            # scores = scores.rename(columns=mapping)
-# input(X, y, )
-# %%
-print(x_train.shape)
