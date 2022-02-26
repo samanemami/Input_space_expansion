@@ -1,12 +1,10 @@
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
 
 
-def train_model(X: np.array, y: np.array, cv: int, m: int) -> pd.DataFrame:
+def train_model(X: np.array, y: np.array, cv: int, m: int, title='none') -> pd.DataFrame:
     """
 
     Parameters
@@ -24,9 +22,7 @@ def train_model(X: np.array, y: np.array, cv: int, m: int) -> pd.DataFrame:
     """
 
     df = pd.DataFrame(y)
-    sns.heatmap(df.corr(method='pearson', min_periods=1), annot=True)
-    plt.title("Correlations")
-    plt.savefig("Correlations.jpg", dpi=500)
+    (df.corr(method='pearson', min_periods=1)).to_csv(title + "_Correlations.csv")
 
     def input(X, y, i):
         X = np.append(X, y[:, i][:, np.newaxis], axis=1)
@@ -75,4 +71,5 @@ def train_model(X: np.array, y: np.array, cv: int, m: int) -> pd.DataFrame:
                         scores.columns[col]: 'X+target_'+str(i) + '|target_'+str(j)}
                     scores = scores.rename(columns=mapping)
                     col += 1
-    scores.to_csv("score.csv", index=False)
+    scores = scores.append(scores.mean(axis=0), ignore_index=True)
+    scores.to_csv(title + "_score.csv", index=False)
