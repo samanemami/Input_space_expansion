@@ -19,7 +19,7 @@ def input(X, y, i):
 
 
 kfold = KFold(n_splits=cv, shuffle=True)
-n_targest = ((m-1) * m) + y.shape[1]
+n_targest = y.shape[1] * 2
 scores = np.zeros((cv, n_targest))
 scores = pd.DataFrame(scores, columns=pd.RangeIndex(0, scores.shape[1], 1))
 
@@ -41,6 +41,23 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
     # train the model by considering the output as
     # an input
 
+    cv_results = cross_val_score(estimator=model, X=x_train, y=y_train[:, 0],
+                                 cv=3, scoring='neg_mean_squared_error')
+
+    scores.iloc[:, i+1] = np.mean(cv_results)
+    i = 0
+    X_train = x_train
+    while i < y_train.shape[1]:
+        X_train = input(X_train, y_train, i)
+        if i+1 < y_train.shape[1]:
+            Y_train = y_train[:, i+1]
+        else:
+            break
+        cv_results = cross_val_score(estimator=model, X=X_train, y=Y_train,
+                                     cv=3, scoring='neg_mean_squared_error')
+        scores.iloc[:, i+1] = np.mean(cv_results)
+        i += 1
+# %%
     col = False
     for i in range(0, y_train.shape[1], 1):
         x_train = input(x_train, y_train, i)
@@ -64,27 +81,9 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
 # scores = scores.append(scores.mean(axis=0), ignore_index=True)
 # scores.to_csv(title + "_score.csv", index=False)
 # %%
-n_targest = 5
-scores = np.zeros((cv, n_targest))
-scores = pd.DataFrame(scores)
 
 
-cv_results = cross_val_score(estimator=model, X=x_train, y=y_train[:, 0],
-                                 cv=3, scoring='neg_mean_squared_error')
-
-scores.iloc[:, 0] = np.mean(cv_results)
-i = 0
-X_train = x_train
-while i < y_train.shape[1]:
-    X_train = input(X_train, y_train, i)
-    if i+1 < y_train.shape[1]:
-        Y_train = y_train[:, i+1]
-    else:
-        break
-    cv_results = cross_val_score(estimator=model, X=X_train, y=Y_train,
-                                 cv=3, scoring='neg_mean_squared_error')
-    scores.iloc[:, i+1] = np.mean(cv_results)
-    i += 1
 # %%
 scores
 
+y.shape[1] * 2
