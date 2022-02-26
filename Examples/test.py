@@ -1,7 +1,6 @@
 # %%
-from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, cross_val_score
 import pandas as pd
 import numpy as np
 from sklearn import datasets as dts
@@ -40,50 +39,25 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
 
     # train the model by considering the output as
     # an input
-
+    i += 1
     cv_results = cross_val_score(estimator=model, X=x_train, y=y_train[:, 0],
-                                 cv=3, scoring='neg_mean_squared_error')
-
-    scores.iloc[:, i+1] = np.mean(cv_results)
-    i = 0
+                                 cv=3, scoring='r2')
+    scores.iloc[:, i] = np.mean(cv_results)
+    mapping = {scores.columns[i]: 'D\'_target_0'}
+    scores = scores.rename(columns=mapping)
+    j = 0
     X_train = x_train
-    while i < y_train.shape[1]:
-        X_train = input(X_train, y_train, i)
-        if i+1 < y_train.shape[1]:
-            Y_train = y_train[:, i+1]
+    while j < y_train.shape[1]:
+        i += 1
+        X_train = input(X_train, y_train, j)
+        if j+1 < y_train.shape[1]:
+            Y_train = y_train[:, j+1]
         else:
             break
         cv_results = cross_val_score(estimator=model, X=X_train, y=Y_train,
-                                     cv=3, scoring='neg_mean_squared_error')
-        scores.iloc[:, i+1] = np.mean(cv_results)
-        i += 1
+                                     cv=10, scoring='r2')
+        scores.iloc[:, i] = np.mean(cv_results)
+        mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
+        scores = scores.rename(columns=mapping)
+        j += 1
 # %%
-    col = False
-    for i in range(0, y_train.shape[1], 1):
-        x_train = input(x_train, y_train, i)
-        x_test = input(x_test, y_test, i)
-        if col:
-            if abs(col - col+1) < 1:
-                col += 1
-            else:
-                col = col
-        else:
-            col = i+y.shape[1]
-        for j in range(0, y_train.shape[1], 1):
-            if i != j:
-                model.fit(x_train, y_train[:, j])
-                score = model.score(x_test, y_test[:, j])
-                scores.iloc[cv_, col] = score
-                mapping = {
-                    scores.columns[col]: 'X+target_'+str(i) + '|target_'+str(j)}
-                scores = scores.rename(columns=mapping)
-                col += 1
-# scores = scores.append(scores.mean(axis=0), ignore_index=True)
-# scores.to_csv(title + "_score.csv", index=False)
-# %%
-
-
-# %%
-scores
-
-y.shape[1] * 2
