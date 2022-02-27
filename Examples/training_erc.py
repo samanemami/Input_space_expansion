@@ -1,3 +1,7 @@
+""" ERC """
+
+# Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
+
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
 import pandas as pd
@@ -20,6 +24,8 @@ def train_model(X, y, cv_out, cv_in, random_state, title) -> pd.DataFrame:
     Data Frame including the score for each models
 
     """
+
+    np.random.seed(random_state)
 
     df = pd.DataFrame(y)
     (df.corr(method='pearson', min_periods=1)).to_csv(title + "_Correlations.csv")
