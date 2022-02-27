@@ -98,8 +98,6 @@ for _, (train_index, test_index) in enumerate(kfold.split(X, y)):
             score = model.score(x_test, y_test[:, j+1])
             score_.append(score)
 
-
-       
         pred_ = np.mean(pred, axis=1)
 
         intrain = np.mean(intrain_, axis=0)
@@ -108,3 +106,6 @@ for _, (train_index, test_index) in enumerate(kfold.split(X, y)):
         mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
         scores = scores.rename(columns=mapping)
         j += 1
+        
+scores = scores.append(scores.mean(axis=0), ignore_index=True)
+scores.to_csv(title + "_score.csv", index=False)
