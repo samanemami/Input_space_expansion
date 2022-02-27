@@ -12,7 +12,6 @@ X, y = dts.make_regression(n_samples=500, n_features=5, n_targets=m)
 
 cv = 2
 
-
 def input(X, y, i):
     X = np.append(X, y[:, i][:, np.newaxis], axis=1)
     return X
@@ -37,13 +36,19 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
         mapping = {scores.columns[i]: 'target_'+str(i)}
         scores = scores.rename(columns=mapping)
 
-
     # train the model by considering the output as
     # an input
     i += 1
-    cv_results = cross_val_score(estimator=model, X=x_train, y=y_train[:, 0],
-                                 cv=3, scoring='r2')
-    scores.iloc[:, i] = np.mean(cv_results)
+    score_ = []
+    for (train_index, test_index) in (kfold.split(x_train, y_train[:, 0])):
+        dftrain, dfeval = x_train[train_index], x_train[test_index]
+        ytrain, yeval = y_train[train_index], y_train[test_index]
+
+        model = RandomForestRegressor()
+        model.fit(dftrain, ytrain)
+        score = model.score(x_test, y_test[:, 0])
+        score_.append(score)
+    scores.iloc[:, i] = np.mean(score_)
     mapping = {scores.columns[i]: 'D\'_target_0'}
     scores = scores.rename(columns=mapping)
 
@@ -64,12 +69,10 @@ for cv_, (train_index, test_index) in enumerate(kfold.split(X, y)):
 
             model = RandomForestRegressor()
             model.fit(dftrain, ytrain)
-            score = model.score(dfeval, yeval)
+            intrain.append(model.score(dfeval, yeval))
+            score = model.score(x_test, y_test[:, j+1])
             score_.append(score)
-        intrain.append(score_)
-        scores.iloc[cv_, i] = model.score(x_test, y_test[:, j+1])
+        scores.iloc[cv_, i] = np.mean(score_)
         mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
         scores = scores.rename(columns=mapping)
         j += 1
-# %%
-scores
