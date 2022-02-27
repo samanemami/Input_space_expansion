@@ -59,27 +59,34 @@ for _, (train_index, test_index) in enumerate(kfold.split(X, y)):
     j = 0
     score_ = []
     intrain_ = []
+    pred = np.zeros((y_test.shape[0], cv_in))
+    from sklearn.metrics import r2_score
     while j < y_train.shape[1]:
         i += 1
         x_train = input(x_train, y_train, j)
-        x_test = input(x_test, y_train, j)
+        # x_test = input(x_test, y_train, j)
         if j+1 < y_train.shape[1]:
             Y_train = y_train[:, j+1]
         else:
             break
-        for (train_index, test_index) in (kfold.split(x_train, Y_train)):
+        for cv_, (train_index, test_index) in enumerate(kfold.split(x_train, Y_train)):
             dftrain, dfeval = x_train[train_index], x_train[test_index]
             ytrain, yeval = Y_train[train_index], Y_train[test_index]
 
             model = RandomForestRegressor()
             model.fit(dftrain, ytrain)
+            pred = model.predict(x_test)
+            # r2_score(y_test, pred)
+            X_test = input(x_test, pred, j)
 
-            intrain_.append(model.score(dfeval, yeval))
-            score = model.score(x_test, y_test[:, j+1])
-            score_.append(score)
+        #     intrain_.append(model.score(dfeval, yeval))
+        #     score = model.score(x_test, y_test[:, j+1])
+        #     score_.append(score)
 
-        intrain = np.mean(intrain_, axis=0)
-        scores.iloc[_, i] = np.mean(score_)
-        mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
-        scores = scores.rename(columns=mapping)
+        # pred = np.mean(pred, axis=1)
+
+        # intrain = np.mean(intrain_, axis=0)
+        # scores.iloc[_, i] = np.mean(score_)
+        # mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
+        # scores = scores.rename(columns=mapping)
         j += 1
