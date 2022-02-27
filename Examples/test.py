@@ -43,18 +43,21 @@ for _, (train_index, test_index) in enumerate(kfold.split(X, y)):
     i += 1
     score_ = []
     Y_train = y_train[:, 0]
+    pred_ = np.zeros((y_test.shape[0], cv_in))
     # Train and predict the first output
-    for (train_index, test_index) in (kfold.split(x_train, Y_train)):
+    for cv_, (train_index, test_index) in enumerate(kfold.split(x_train, Y_train)):
         dftrain, dfeval = x_train[train_index], x_train[test_index]
         ytrain, yeval = Y_train[train_index], Y_train[test_index]
 
         model = RandomForestRegressor()
         model.fit(dftrain, ytrain)
         score = model.score(x_test, y_test[:, 0])
+        pred_[:, cv_] = model.predict(x_test)
         score_.append(score)
     scores.iloc[_, i] = np.mean(score_)
     mapping = {scores.columns[i]: 'D\'_target_0'}
     scores = scores.rename(columns=mapping)
+    pred_ = np.mean(pred_, axis=1)
 
     j = 0
     score_ = []
@@ -64,7 +67,7 @@ for _, (train_index, test_index) in enumerate(kfold.split(X, y)):
     while j < y_train.shape[1]:
         i += 1
         x_train = input(x_train, y_train, j)
-        # x_test = input(x_test, y_train, j)
+        x_test = np.append(x_test, pred_[:, np.newaxis], axis=1)
         if j+1 < y_train.shape[1]:
             Y_train = y_train[:, j+1]
         else:
@@ -75,18 +78,19 @@ for _, (train_index, test_index) in enumerate(kfold.split(X, y)):
 
             model = RandomForestRegressor()
             model.fit(dftrain, ytrain)
-            pred = model.predict(x_test)
-            # r2_score(y_test, pred)
-            X_test = input(x_test, pred, j)
 
-        #     intrain_.append(model.score(dfeval, yeval))
-        #     score = model.score(x_test, y_test[:, j+1])
-        #     score_.append(score)
+            pred[:, cv_] = model.predict(x_test)
+            intrain_.append(model.score(dfeval, yeval))
+            score = model.score(x_test, y_test[:, j+1])
+            score_.append(score)
 
-        # pred = np.mean(pred, axis=1)
+        pred_ = np.mean(pred, axis=1)
+        print(pred_.shape)
 
-        # intrain = np.mean(intrain_, axis=0)
-        # scores.iloc[_, i] = np.mean(score_)
-        # mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
-        # scores = scores.rename(columns=mapping)
+        intrain = np.mean(intrain_, axis=0)
+        scores.iloc[_, i] = np.mean(score_)
+        mapping = {scores.columns[i]: 'D\'_target_' + str(j+1)}
+        scores = scores.rename(columns=mapping)
         j += 1
+#%%
+scores
