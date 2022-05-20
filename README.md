@@ -1,6 +1,13 @@
-# ERC
-Ensemble of Regressor Chains
+## Input space expansion
 
-In this repository, I tried to write an algorithm to reproduce an ERC algorithm of the Multi-target regression via input space expansion: treating targets as inputs paper.
+The focus of this project is to reproduce the two well-known multioutput regression models. The SST and ERC are introduced by [1]. The main work is presented in Java [here](https://github.com/lefman/mulan-extended).
 
-To reference the main paper, please refer [here](https://link.springer.com/article/10.1007/s10994-016-5546-z).
+## Dataset
+
+The datasets and references are mentioned in [1].
+
+
+## References
+<ol>
+<li> Spyromitros-Xioufis, Eleftherios, et al. "Multi-target regression via input space expansion: treating targets as inputs." Machine Learning 104.1 (2016): 55-98. </li>
+</ol>
