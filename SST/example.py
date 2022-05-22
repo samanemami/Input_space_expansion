@@ -11,6 +11,7 @@ x_train, x_test, y_train, y_test = train_test_split(X,
                                                     random_state=1)
 
 if __name__ == "__main__":
+    
     model = sst(model=BaggingRegressor(n_estimators=100),
                 verbose=1)
     model.fit(x_train, y_train)

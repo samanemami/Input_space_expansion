@@ -1,9 +1,8 @@
 import pickle
 import numpy as np
-import pandas as pd
-from inspect import isclass
-from sklearn.model_selection import KFold, check_cv, train_test_split
+import multiprocessing as mpc
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import check_cv, train_test_split
 
 
 class sst():
@@ -15,6 +14,7 @@ class sst():
         self.verbose = verbose
 
     def _kfold(self, X, i=None):
+
         #  A K-Fold single shuffled train-test split
         cv = check_cv(cv=[train_test_split(X,
                                            shuffle=True,
@@ -31,8 +31,10 @@ class sst():
         self.score_1 = []
         n = y.shape[1]
         for i in range(n):
-            x_train, x_test = self._kfold(X=X, i=i)
-            y_train, y_test = self._kfold(X=y, i=i)
+            pool = mpc.Pool(2)
+            result = pool.starmap(self._kfold, [(X, i), (y, i)])
+            x_train, x_test = result[0][0], result[0][1]
+            y_train, y_test = result[1][0], result[1][1]
 
             model = self.model
             model.fit(x_train, y_train[:, i])
@@ -58,7 +60,6 @@ class sst():
         if self.verbose > 0:
             print("{0} dumped models predicted {0} targets. \n The y_hat size is {1}".format(
                 y_hat.shape[1], y_hat.shape))
-            print('----------')
 
         return y_hat
 
@@ -69,8 +70,10 @@ class sst():
         j = n
         for i in range(n):
             j += 1
-            x_train = self._kfold(X=X, i=j)[0]
-            y_train = self._kfold(X=y, i=j)[0]
+            pool = mpc.Pool(2)
+            result = pool.starmap(self._kfold, [(X, j), (y, j)])
+            x_train = result[0][0]
+            y_train = result[1][0]
 
             x_train_ = np.append(x_train, y_hat, axis=1)
 
@@ -105,7 +108,7 @@ class sst():
             pred[:, i] = model.predict(x_test)
         return pred
 
-    def score(self, X, y, metric='RMSE'):
+    def score(self, X, y):
         pred = self.predict(X)
         score = mean_squared_error(y_true=y,
                                    y_pred=pred,
