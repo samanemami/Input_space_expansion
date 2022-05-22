@@ -1,7 +1,8 @@
 import pickle
 import numpy as np
+import pandas as pd
 from inspect import isclass
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, check_cv, train_test_split
 from sklearn.metrics import mean_squared_error
 
 
@@ -15,18 +16,16 @@ class sst():
         self.random_state = random_state
         self.verbose = verbose
 
-    def _kfold(self, X, y, i):
-        n = y.shape[1]
-        kfold = KFold(n_splits=n, shuffle=True,
-                      random_state=self.random_state)
-        index = list(kfold.split(X, y))
+    def _kfold(self, X, i=None):
+        #  A K-Fold single shuffled train-test split
+        cv = check_cv(cv=[train_test_split(X,
+                                           shuffle=True,
+                                           random_state=i)])
 
-        x_train, x_test = X[index[i][0]], X[index[i][1]]
-        y_train, y_test = y[index[i][0]], y[index[i][1]]
+        index = next(cv.split())
+        train, test = index[0], index[1]
 
-        self.index = index
-
-        return x_train, x_test, y_train, y_test
+        return train, test
 
     def _first_stage(self, X, y):
 
@@ -34,7 +33,9 @@ class sst():
         self.score_1 = []
         n = y.shape[1]
         for i in range(n):
-            x_train, x_test, y_train, y_test = self._kfold(X=X, y=y, i=i)
+            x_train, x_test = self._kfold(X=X, i=i)
+            y_train, y_test = self._kfold(X=y, i=i)
+
             model = self.model
             model.fit(x_train, y_train[:, i])
             self.score_1.append(np.sqrt(mean_squared_error(y_test[:, i],
@@ -56,23 +57,34 @@ class sst():
 
         # Build an array from predicted arrays with different sizes
         # Due to the cross-validation indices.
-        lens = [len(i) for i in y_hat]
-        max_ = max(lens)
-        arr = np.zeros((len(y_hat), max_), int)
-        mask = np.arange(max_) < np.array(lens)[:, None]
-        arr[mask] = (np.concatenate(y_hat))
-        if self.verbose > 0:
-            print("{0} dumped models predicted {0} targets. \n The y_hat size is {1}".format(
-                arr.shape[0], arr.shape))
-        return arr.T
+        # lens = [len(i) for i in y_hat]
+        # max_ = max(lens)
+        # arr = np.zeros((len(y_hat), max_), int)
+        # mask = np.arange(max_) < np.array(lens)[:, None]
+        # arr[mask] = (np.concatenate(y_hat))
+        # if self.verbose > 0:
+        #     print("{0} dumped models predicted {0} targets. \n The y_hat size is {1}".format(
+        #         arr.shape[0], arr.shape))
+
+        return np.array(y_hat)
 
     def _second_stage(self, X, y):
         # Dumps trained model over augmented input variables
         y_hat = self._first_stage(X, y)
         n = y.shape[1]
+        j = n
         for i in range(n):
-            x_train, x_test, y_train, y_test = self._kfold(X=X, y=y, i=i)
-            x_train_ = np.append(x_train, y_hat, axis=1)
+            j += 1
+            x_train = self._kfold(X=X, i=j)[0]
+            y_train = self._kfold(X=y, i=j)[0]
+            if x_train.shape[0] == y_hat.shape[0]:
+                x_train_ = np.append(x_train, y_hat, axis=1)
+            else:
+                yhat, xtrain = pd.DataFrame(y_hat, columns=None, index=None), pd.DataFrame(
+                    x_train, columns=None, index=None)
+                x_train_ = (
+                    (pd.concat([yhat, xtrain], axis=1)).fillna(0)).values
+
             model = self.model
             model.fit(x_train_, y_train[:, i])
 
@@ -90,7 +102,6 @@ class sst():
         return self
 
     def predict(self, X):
-
         pred_hat = np.zeros((X.shape[0], self.n))
         for i in range(self.n):
             # 1st stage of the prediction
@@ -113,7 +124,7 @@ class sst():
 
     def get_in_train_score(self):
 
-        if not isclass(self):
+        if isclass(self):
             raise ValueError('The model needs to be fitted first.')
         else:
             return self.score_1
