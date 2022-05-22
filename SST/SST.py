@@ -9,11 +9,9 @@ from sklearn.metrics import mean_squared_error
 class sst():
     def __init__(self,
                  model,
-                 random_state=None,
                  verbose=0):
 
         self.model = model
-        self.random_state = random_state
         self.verbose = verbose
 
     def _kfold(self, X, i=None):
@@ -38,10 +36,10 @@ class sst():
 
             model = self.model
             model.fit(x_train, y_train[:, i])
-            self.score_1.append(np.sqrt(mean_squared_error(y_test[:, i],
-                                                           model.predict(
-                                                               x_test),
-                                                           squared=False)))
+            self.score_1.append(mean_squared_error(y_test[:, i],
+                                                   model.predict(
+                x_test),
+                squared=False))
 
             # Dumping the trained model in a binary mode
             model_name = 'h' + str(i)
@@ -62,7 +60,7 @@ class sst():
                 y_hat.shape[1], y_hat.shape))
             print('----------')
 
-        return np.array(y_hat)
+        return y_hat
 
     def _second_stage(self, X, y):
         # Dumps trained model over augmented input variables
@@ -73,13 +71,8 @@ class sst():
             j += 1
             x_train = self._kfold(X=X, i=j)[0]
             y_train = self._kfold(X=y, i=j)[0]
-            if x_train.shape[0] == y_hat.shape[0]:
-                x_train_ = np.append(x_train, y_hat, axis=1)
-            else:
-                yhat, xtrain = pd.DataFrame(y_hat, columns=None, index=None), pd.DataFrame(
-                    x_train, columns=None, index=None)
-                x_train_ = (
-                    (pd.concat([yhat, xtrain], axis=1)).fillna(0)).values
+
+            x_train_ = np.append(x_train, y_hat, axis=1)
 
             model = self.model
             model.fit(x_train_, y_train[:, i])
@@ -112,15 +105,12 @@ class sst():
             pred[:, i] = model.predict(x_test)
         return pred
 
-    def score(self, X, y):
+    def score(self, X, y, metric='RMSE'):
         pred = self.predict(X)
-        return mean_squared_error(y_true=y,
-                                  y_pred=pred,
-                                  multioutput="raw_values")
+        score = mean_squared_error(y_true=y,
+                                   y_pred=pred,
+                                   multioutput="raw_values")
+        return score
 
-    def get_in_train_score(self):
-
-        if isclass(self):
-            raise ValueError('The model needs to be fitted first.')
-        else:
-            return self.score_1
+    def _get_intrain_score(self):
+        return self.score_1
