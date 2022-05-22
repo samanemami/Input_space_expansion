@@ -55,16 +55,12 @@ class sst():
                 print("First stage model_{0}, for target {1} is dumped.".format(
                     model_name, i))
 
-        # Build an array from predicted arrays with different sizes
-        # Due to the cross-validation indices.
-        # lens = [len(i) for i in y_hat]
-        # max_ = max(lens)
-        # arr = np.zeros((len(y_hat), max_), int)
-        # mask = np.arange(max_) < np.array(lens)[:, None]
-        # arr[mask] = (np.concatenate(y_hat))
-        # if self.verbose > 0:
-        #     print("{0} dumped models predicted {0} targets. \n The y_hat size is {1}".format(
-        #         arr.shape[0], arr.shape))
+        y_hat = (np.array(y_hat)).T
+
+        if self.verbose > 0:
+            print("{0} dumped models predicted {0} targets. \n The y_hat size is {1}".format(
+                y_hat.shape[1], y_hat.shape))
+            print('----------')
 
         return np.array(y_hat)
 
