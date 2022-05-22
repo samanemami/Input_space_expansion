@@ -1,32 +1,20 @@
-# Author: Seyedsaman Emami 
+# Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
 import pickle
 import numpy as np
+from Base import _base
 import multiprocessing as mpc
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import check_cv, train_test_split
 
 
-class sst():
+class sst(_base.BaseEstimator):
     def __init__(self,
                  model,
                  verbose=0):
 
         self.model = model
         self.verbose = verbose
-
-    def _kfold(self, X, i=None):
-
-        #  A K-Fold single shuffled train-test split
-        cv = check_cv(cv=[train_test_split(X,
-                                           shuffle=True,
-                                           random_state=i)])
-
-        index = next(cv.split())
-        train, test = index[0], index[1]
-
-        return train, test
 
     def _first_stage(self, X, y):
 
@@ -110,13 +98,6 @@ class sst():
             model = pickle.load(open('h\''+str(i), 'rb'))
             pred[:, i] = model.predict(x_test)
         return pred
-
-    def score(self, X, y):
-        pred = self.predict(X)
-        score = mean_squared_error(y_true=y,
-                                   y_pred=pred,
-                                   multioutput="raw_values")
-        return score
 
     def _get_intrain_score(self):
         return self.score_1

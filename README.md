@@ -2,10 +2,6 @@
 
 The focus of this project is to reproduce the two well-known multioutput regression models. The SST and ERC are introduced by [1]. The main work is presented in Java [here](https://github.com/lefman/mulan-extended).
 
-## Dataset
-
-The datasets and references are mentioned in [1].
-
 
 ## References
 <ol>
