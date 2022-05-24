@@ -1,3 +1,4 @@
+import multiprocessing as mpc
 from abc import abstractmethod
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import check_cv, train_test_split
@@ -5,18 +6,6 @@ from sklearn.model_selection import check_cv, train_test_split
 
 class BaseEstimator:
     """Base class for SST and ERC."""
-
-    def _kfold(self, X, i=None):
-
-        #  A K-Fold single shuffled train-test split
-        cv = check_cv(cv=[train_test_split(X,
-                                           shuffle=True,
-                                           random_state=i)])
-
-        index = next(cv.split())
-        train, test = index[0], index[1]
-
-        return train, test
 
     @abstractmethod
     def fit(self, X, y):
@@ -32,3 +21,8 @@ class BaseEstimator:
                                    y_pred=pred,
                                    multioutput="raw_values")
         return score
+
+    def _check_params(self):
+
+        if not self.path:
+            raise ValueError("Define a directory to dump the training models")
