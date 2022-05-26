@@ -1,6 +1,7 @@
 # Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
+from itertools import permutations
 import os
 import pickle
 import numpy as np
@@ -13,43 +14,61 @@ class erc(_base.BaseEstimator):
     def __init__(self,
                  model,
                  cv=3,
-                 verbose=0,
-                 random_state=None,
+                 chain=1,
+                 seed=1,
                  path=None,
-                 clear=False):
+                 ):
 
         self.model = model
         self.cv = cv
-        self.verbose = verbose
-        self.random_state = random_state
+        self.chain = chain
+        self.seed = seed
         self.path = path
-        self.clear = clear
 
-    def fit(self, X, y):
+    def _augmenting(self, X, y, i):
 
-        np.random.seed(self.random_state)
+        x = np.append(X, y[:, i][:, np.newaxis], axis=1)
+
+        return x
+
+    def _init_estimator(self, X, y, perm):
+
+        model = self.model
+        model.fit(X, y[:, perm])
+        pred = model.predict(X)
+
+        return pred, model
+
+    def _fit_chain(self, X, y):
+
+        np.random.seed(self.seed)
 
         self._check_params()
-
+        # Add a loop for the number of chains (ERC)
+        # Number of chains: self.chain=1
         kfold = KFold(n_splits=self.cv,
                       shuffle=True,
-                      random_state=self.random_state)
+                      random_state=self.seed)
 
-        permutation = np.random.permutation(y.shape[1])
-
+        self.permutation = np.random.permutation(y.shape[1])
+        permutation = self.permutation
         self.n = y.shape[1]
         pred = np.zeros_like(y)
-        splits = []
 
-        for i, perm in enumerate(permutation):
-            if not i == 0:
-                # Augment the input with the real values
-                # of previous output in the permutation list
-                X = np.append(X, y[:, permutation[perm-1]]
-                              [:, np.newaxis], axis=1)
-            splits_ = list(kfold.split(X, y))
-            for _, (train_index, test_index) in enumerate(splits_):
+        # self.models = np.empty((self.n, 1), dtype='object')
+        self.models = []
+        perm_ = 0
 
+        while perm_ < len(permutation):
+            perm = next(iter(permutation))
+            pred[:, perm], model = self._init_estimator(X, y, perm)
+            # self.models[permutation[0], :] = model
+            self.models.append(model)
+            X = self._augmenting(X, pred, perm)
+            splits = list(kfold.split(X, y))
+            permutation = permutation[1:]
+            perm = next(iter(permutation))
+            for (train_index, test_index) in splits:
                 x_train, x_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
 
@@ -59,16 +78,33 @@ class erc(_base.BaseEstimator):
                 # meta-variable generation
                 pred[test_index, perm] = model.predict(x_test)
 
-                # Dumping trained models of the 1st stage
-                model_name = os.path.join(
-                    self.path, 'h'+str(perm)+'s'+str(_))
-                pickle.dump(model, open(model_name, "wb"))
 
-            if self.verbose > 0:
-                print("model_{0}, for target {1} is dumped.".format(
-                    model_name, perm))
-
-        splits.append(splits_)
+    def fit(self, X, y):
+        chains = np.random.permutation(self.chain)
+        for chain in chains:
+            self._fit_chain(self, X, y)
 
     def predict(self, X):
-        pass
+        pred = np.zeros((X.shape[0], self.n))
+
+        perm = self.permutation[0]
+        model_name = os.path.join(self.path, 'h'+str(perm))
+        model = pickle.load(open(model_name, "rb"))
+
+        pred[:, perm] = model.predict(X)
+
+        X = self._augmenting(X, pred, perm)
+
+        for i, perm in enumerate(self.permutation[1:]):
+            model_name = os.path.join(self.path, 'h'+str(perm))
+            # model = pickle.load(open(model_name, "rb"))
+            pred[:, perm] = model.predict(X)
+
+            X = self._augmenting(X, pred, perm)
+
+            if i+1 == len(self.permutation[1:]):
+                break
+        return pred
+
+    def _get_permutation(self):
+        return self.permutation
