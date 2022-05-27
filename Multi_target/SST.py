@@ -44,7 +44,7 @@ class sst(_base.BaseEstimator):
             model.fit(X, y[:, i])
             model_name = os.path.join(self.path, 'h'+str(i))
             pickle.dump(model, open(model_name, "wb"))
-
+            
             for (train_index, test_index) in (kfold.split(X, y)):
 
                 x_train, x_test = X[train_index], X[test_index]
@@ -59,11 +59,11 @@ class sst(_base.BaseEstimator):
         self.score_ = mean_squared_error(y, pred)
 
         # 2nd training stage
-        XX = np.append(X, pred, axis=1)
+        X = np.append(X, pred, axis=1)
         for i in range(self.n):
 
             model = self.model
-            model.fit(XX, y[:, i])
+            model.fit(X, y[:, i])
 
             # Dumping trained models of the 2nd stage
             model_name = os.path.join(self.path, 'h_'+str(i))
