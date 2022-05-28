@@ -24,13 +24,3 @@ class BaseEstimator:
                                    squared=False)
 
         return score
-
-    def _check_params(self):
-        if not self.path:
-            raise ValueError("Define a path to dump the models.")
-
-    def _clear(self):
-        # To clear the dumped models in the directory
-        for root, _, models in os.walk(self.path):
-            for model in models:
-                os.remove(os.path.join(root, model))
