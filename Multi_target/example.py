@@ -31,7 +31,7 @@ pred = model.predict(x_test)
 X, y = make_regression(n_targets=3)
 
 models = np.empty((10, 1), dtype=object)
-# %%
+#%%
 for i in range(9):
     model = GradientBoostingRegressor(n_estimators=i+1)
     model.fit(X, y[:, 0])
@@ -42,4 +42,5 @@ for i in range(9):
     exec(f'model_{i} = model.fit(X, y[:, 0])')
     exec(f'models[i, 0] = model_{i}')
 # %%
+
 models

@@ -1,13 +1,13 @@
 # Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
+import copy
 import random
 import numpy as np
 from Base import _base
 from sklearn.model_selection import KFold
 from sklearn.ensemble import BaggingRegressor, RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
-
 
 
 class erc(_base.BaseEstimator):
@@ -41,9 +41,10 @@ class erc(_base.BaseEstimator):
         pred = np.zeros_like(y)
 
         self.models = np.empty((self.n, 1), dtype=object)
-        # self.models = {}
+        
         for i, perm in enumerate(self.permutation):
-            exec(f'model_{perm} = self.model.fit(X, y[:, perm])')
+            exec(f'model_{perm} = copy.deepcopy(self.model)')
+            exec(f'model_{perm}.fit(X, y[:, perm])')
             exec(f'self.models[perm, 0] = model_{perm}')
             splits = list(kfold.split(X, y))
             i += 1
