@@ -41,7 +41,7 @@ class erc(_base.BaseEstimator):
         pred = np.zeros_like(y)
 
         self.models = np.empty((self.n, 1), dtype=object)
-        
+
         for i, perm in enumerate(self.permutation):
             exec(f'model_{perm} = copy.deepcopy(self.model)')
             exec(f'model_{perm}.fit(X, y[:, perm])')
@@ -68,9 +68,14 @@ class erc(_base.BaseEstimator):
 
     def predict(self, X):
         pred = np.zeros((X.shape[0], self.n))
-        for perm in self.permutation:
+        i += 1
+        for i, perm in enumerate(self.permutation):
             model = self.models[perm][0]
             pred[:, perm] = model.predict(X)
+
+            X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
+            if i == len(self.permutation):
+                break
 
     def _get_permutation(self):
         return self.permutation

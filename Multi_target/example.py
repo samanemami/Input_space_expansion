@@ -1,5 +1,3 @@
-# %%
-
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.neural_network import MLPRegressor
@@ -26,21 +24,3 @@ model = erc(model=model_,
             )
 model.fit(X, y)
 pred = model.predict(x_test)
-# %%
-
-X, y = make_regression(n_targets=3)
-
-models = np.empty((10, 1), dtype=object)
-#%%
-for i in range(9):
-    model = GradientBoostingRegressor(n_estimators=i+1)
-    model.fit(X, y[:, 0])
-    X = np.append(X, y[:, 0][:, np.newaxis], axis=1)
-
-    models.copy
-    # exec(f'model_{i} = model.copy')
-    exec(f'model_{i} = model.fit(X, y[:, 0])')
-    exec(f'models[i, 0] = model_{i}')
-# %%
-
-models
