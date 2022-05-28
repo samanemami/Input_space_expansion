@@ -1,8 +1,5 @@
-import functools
 from abc import abstractmethod
-import os
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import check_cv, train_test_split
 
 
 class BaseEstimator:

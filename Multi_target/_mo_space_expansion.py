@@ -17,14 +17,34 @@ class erc(_base.BaseEstimator):
                  cv=3,
                  chain=1,
                  seed=1,
-                 path=None,
                  ):
 
         self.model = model
         self.cv = cv
         self.chain = chain
         self.seed = seed
-        self.path = path
+
+    """ Ensemble of Regressor Chains
+
+
+    parameters
+    ------------
+    model : Sklrean ML class, 
+        Sklearn ML model to build aN ERC ensemble model.
+    
+    cv : int, default=3,
+        The number of folds (disjoint parts) for 
+        the KFold cross-validation.
+    
+    chain : int, default=1,
+        The number of Ensemble chains.
+        If the chain is equal to 1, the model 
+        returns the RC model.
+    
+    seed : int, default=1,
+        Seed value to generate a random number.
+
+    """
 
     def _fit_chain(self, X, y, chain):
 
@@ -106,13 +126,27 @@ class sst(_base.BaseEstimator):
                  model,
                  cv=3,
                  seed=1,
-                 path=None,
                  ):
 
         self.model = model
         self.cv = cv
         self.seed = seed
-        self.path = path
+
+    """ Stacked single-target
+
+    parameters
+    ------------
+    model : Sklrean ML class, 
+        Sklearn ML model to build aN ERC ensemble model.
+    
+    cv : int, default=3,
+        The number of folds (disjoint parts) for 
+        the KFold cross-validation.
+    
+    seed : int, default=1,
+        Seed value to generate a random number.
+
+    """
 
     def fit(self, X, y):
 
