@@ -5,6 +5,9 @@ import random
 import numpy as np
 from Base import _base
 from sklearn.model_selection import KFold
+from sklearn.ensemble import BaggingRegressor, RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
+
 
 
 class erc(_base.BaseEstimator):
@@ -37,15 +40,12 @@ class erc(_base.BaseEstimator):
         self.n = y.shape[1]
         pred = np.zeros_like(y)
 
-        # self.models = np.empty((self.n, 1), dtype=object)
-
-        self.models = {}
+        self.models = np.empty((self.n, 1), dtype=object)
+        # self.models = {}
         for i, perm in enumerate(self.permutation):
-            model = self.model
-            model.fit(X, y[:, perm])
-            self.models[perm] = model
+            exec(f'model_{perm} = self.model.fit(X, y[:, perm])')
+            exec(f'self.models[perm, 0] = model_{perm}')
             splits = list(kfold.split(X, y))
-
             i += 1
             if i == len(self.permutation):
                 break
@@ -54,11 +54,11 @@ class erc(_base.BaseEstimator):
                 x_train, x_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
 
-                model = self.model
-                model.fit(x_train, y_train[:, perm])
+                model_ = self.model
+                model_.fit(x_train, y_train[:, perm])
 
                 # meta-variable generation
-                pred[test_index, perm] = model.predict(x_test)
+                pred[test_index, perm] = model_.predict(x_test)
 
             X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
 
@@ -68,7 +68,7 @@ class erc(_base.BaseEstimator):
     def predict(self, X):
         pred = np.zeros((X.shape[0], self.n))
         for perm in self.permutation:
-            model = self.models[perm]
+            model = self.models[perm][0]
             pred[:, perm] = model.predict(X)
 
     def _get_permutation(self):
