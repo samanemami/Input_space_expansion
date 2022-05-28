@@ -6,8 +6,6 @@ import random
 import numpy as np
 from Base import _base
 from sklearn.model_selection import KFold
-from sklearn.ensemble import BaggingRegressor, RandomForestRegressor
-from sklearn.neural_network import MLPRegressor
 
 
 class erc(_base.BaseEstimator):
@@ -30,23 +28,24 @@ class erc(_base.BaseEstimator):
         n = random.randint(0, 100)
         np.random.seed(n)
 
-        self._check_params()
-
         kfold = KFold(n_splits=self.cv,
                       shuffle=True,
                       random_state=self.seed)
 
-        self.permutation = np.random.permutation(y.shape[1])
-        self.n = y.shape[1]
         pred = np.zeros_like(y)
 
-        self.models = np.empty((self.n, 1), dtype=object)
+        models = np.empty((self.n, 1), dtype=object)
 
         for i, perm in enumerate(self.permutation):
+
+            # Build a new variable and deep copy the object
             exec(f'model_{perm} = copy.deepcopy(self.model)')
             exec(f'model_{perm}.fit(X, y[:, perm])')
-            exec(f'self.models[perm, 0] = model_{perm}')
+            # Save the trained model as a binary object in the NumPy array
+            exec(f'models[perm, 0] = model_{perm}')
+
             splits = list(kfold.split(X, y))
+
             i += 1
             if i == len(self.permutation):
                 break
@@ -63,19 +62,34 @@ class erc(_base.BaseEstimator):
 
             X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
 
+        return models
+
     def fit(self, X, y):
-        self._fit_chain(X, y)
+
+        self.n = y.shape[1]
+        self.chains = []
+        self.permutation_chains = np.zeros((self.n, self.chain))
+        for chain in range(self.chain):
+            self.permutation = np.random.permutation(self.n)
+            self.permutation_chains[:, chain] = self.permutation
+            self.chains.append(self._fit_chain(X, y))
+        return self
 
     def predict(self, X):
         pred = np.zeros((X.shape[0], self.n))
-        i += 1
-        for i, perm in enumerate(self.permutation):
-            model = self.models[perm][0]
-            pred[:, perm] = model.predict(X)
 
-            X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
-            if i == len(self.permutation):
-                break
+        for ch, chain in enumerate(self.chains):
+            permutation = self.permutation_chains[:, ch]
+            for i, perm in enumerate(permutation):
+                i += 1
+                model = chain[perm][0]
+                pred[:, perm] = model.predict(X)
+
+                X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
+                if i == len(permutation):
+                    return exec(f'pred_{ch} = pred')
+
+        return pred
 
     def _get_permutation(self):
         return self.permutation

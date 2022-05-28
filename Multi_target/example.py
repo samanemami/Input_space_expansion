@@ -1,5 +1,7 @@
+# %%
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import mean_squared_error
 from sklearn.neural_network import MLPRegressor
 from ERC import erc
 from sklearn.datasets import make_regression
@@ -14,13 +16,17 @@ x_train, x_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=1)
 
 
-model_ = MLPRegressor()
-# model_ = GradientBoostingRegressor(n_estimators=100)
+model_ = BaggingRegressor(n_estimators=100, random_state=5)
 model = erc(model=model_,
             cv=3,
-            chain=1,
+            chain=3,
             seed=5,
             path="ERCModels",
             )
 model.fit(X, y)
-pred = model.predict(x_test)
+
+model.predict(x_test)
+
+
+
+# %%
