@@ -24,7 +24,6 @@ model = erc(model=model_,
             path="ERCModels",
             )
 model.fit(X, y)
-
 model.predict(x_test)
 
 
