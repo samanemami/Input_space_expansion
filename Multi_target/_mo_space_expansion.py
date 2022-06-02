@@ -78,7 +78,7 @@ class erc(_base.BaseEstimator):
                 x_train, x_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
 
-                model_ = self.model
+                model_ = clone(self.model)
                 model_.fit(x_train, y_train[:, perm])
 
                 # meta-variable generation
@@ -98,6 +98,7 @@ class erc(_base.BaseEstimator):
         for chain in range(self.chain):
             self.permutation[:, chain] = np.random.permutation(self.n)
             self.chains.append(self._fit_chain(X, y, chain))
+            # print(X.shape)
         return self
 
     def predict(self, X):
@@ -172,7 +173,7 @@ class sst(_base.BaseEstimator):
                 x_train, x_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
 
-                model = self.model
+                model = clone(self.model)
                 model.fit(x_train, y_train[:, i])
 
                 # meta-variable generation
