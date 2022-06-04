@@ -1,7 +1,6 @@
 # Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
-import copy
 import random
 import numpy as np
 from Base import _base
@@ -60,7 +59,7 @@ class erc(_base.BaseEstimator):
         models = np.empty((self.n, 1), dtype=object)
         permutation = self.permutation[:, chain]
 
-        for i, perm in enumerate(permutation):
+        for perm in permutation[:-1]:
 
             # Build a new variable and deep copy the object
             exec(f'model_{perm} = clone(self.model)')
@@ -68,13 +67,7 @@ class erc(_base.BaseEstimator):
             # Save the trained model as a binary object in the NumPy array
             exec(f'models[perm, 0] = model_{perm}')
 
-            splits = list(kfold.split(X, y))
-
-            i += 1
-            if i == len(permutation):
-                break
-
-            for (train_index, test_index) in splits:
+            for (train_index, test_index) in kfold.split(X, y):
                 x_train, x_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
 
@@ -98,21 +91,18 @@ class erc(_base.BaseEstimator):
         for chain in range(self.chain):
             self.permutation[:, chain] = np.random.permutation(self.n)
             self.chains.append(self._fit_chain(X, y, chain))
-            # print(X.shape)
         return self
 
     def predict(self, X):
         pred = np.zeros((X.shape[0], self.n))
-        for ch, chain in enumerate(self.chains):
+        for i, chain in enumerate(self.chains):
             pred_ = np.zeros_like(pred)
-            permutation = self.permutation[:, ch]
+            permutation = self.permutation[:, i]
             XX = X
-            for i, perm in enumerate(permutation):
-                i += 1
+            for perm in permutation[:-1]:
                 model = chain[perm][0]
                 pred_[:, perm] = model.predict(XX)
                 XX = np.append(XX, pred_[:, perm][:, np.newaxis], axis=1)
-            exec(f'pred_{ch} = pred')
             pred += pred_
 
         return (pred_)/(self.n)
