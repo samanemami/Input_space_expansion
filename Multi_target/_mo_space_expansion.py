@@ -172,11 +172,10 @@ class sst(_base.BaseEstimator):
         self.score_ = mean_squared_error(y, pred)
 
         # 2nd training stage
-        X = np.append(X, pred, axis=1)
         for i in range(self.n):
-
+            XX = np.append(X, np.delete(pred, i, 1), axis=1)
             exec(f'model_{i} = clone(self.model)')
-            exec(f'self.models[i, 1] = model_{i}.fit(X, y[:, i])')
+            exec(f'self.models[i, 1] = model_{i}.fit(XX, y[:, i])')
 
         return self
 
@@ -191,10 +190,10 @@ class sst(_base.BaseEstimator):
             pred_[:, i] = model.predict(X)
         self.pred = pred_
 
-        X = np.append(X, pred_, axis=1)
         for i in range(self.n):
+            XX = np.append(X, np.delete(pred_, i, 1), axis=1)
             model = self.models[i, 1]
-            pred[:, i] = model.predict(X)
+            pred[:, i] = model.predict(XX)
 
         return pred
 
