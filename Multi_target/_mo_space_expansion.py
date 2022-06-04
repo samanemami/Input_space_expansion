@@ -1,6 +1,7 @@
 # Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
+import copy
 import random
 import numpy as np
 from Base import _base
@@ -40,9 +41,6 @@ class erc(_base.BaseEstimator):
 
     def _fit_chain(self, X, y, chain):
 
-        n = random.randint(0, 100)
-        np.random.seed(n)
-
         kfold = KFold(n_splits=self.cv,
                       shuffle=True,
                       random_state=self.seed)
@@ -52,13 +50,16 @@ class erc(_base.BaseEstimator):
         models = np.empty((self.n, 1), dtype=object)
         permutation = self.permutation[:, chain]
 
-        for perm in permutation[:-1]:
+        for i, perm in enumerate(permutation):
 
             # Build a new variable and deep copy the object
             exec(f'model_{perm} = clone(self.model)')
             exec(f'model_{perm}.fit(X, y[:, perm])')
             # Save the trained model as a binary object in the NumPy array
             exec(f'models[perm, 0] = model_{perm}')
+
+            if i+1 == len(permutation):
+                break
 
             for (train_index, test_index) in kfold.split(X, y):
                 x_train, x_test = X[train_index], X[test_index]
@@ -79,6 +80,9 @@ class erc(_base.BaseEstimator):
 
     def fit(self, X, y):
 
+        n = random.randint(0, 100)
+        np.random.seed(n)
+
         self.n = y.shape[1]
         # Chains include RC models
         self.chains = []
@@ -86,7 +90,7 @@ class erc(_base.BaseEstimator):
             (self.n, self.chain), dtype=np.int32)
         for chain in range(self.chain):
             self.permutation[:, chain] = np.random.permutation(self.n)
-            self.chains.append(self._fit_chain(X, y, chain))
+            self.chains.append(copy.deepcopy(self._fit_chain(X, y, chain)))
         return self
 
     def predict(self, X):
@@ -95,10 +99,12 @@ class erc(_base.BaseEstimator):
             pred_ = np.zeros_like(pred)
             permutation = self.permutation[:, i]
             XX = X
-            for perm in permutation[:-1]:
+            for p, perm in enumerate(permutation):
                 model = chain[perm][0]
                 pred_[:, perm] = model.predict(XX)
                 XX = np.append(XX, pred_[:, perm][:, np.newaxis], axis=1)
+                if p+1 == len(permutation):
+                    break
             pred += pred_
 
         return (pred_)/(self.n)
