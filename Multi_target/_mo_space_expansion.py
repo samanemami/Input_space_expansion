@@ -29,7 +29,7 @@ class erc(_base.BaseEstimator):
     parameters
     ------------
     model : Sklrean ML class, 
-        Sklearn ML model to build aN ERC ensemble model.
+        Sklearn ML model to build an ERC ensemble model.
     
     cv : int, default=3,
         The number of folds (disjoint parts) for 
@@ -128,7 +128,7 @@ class sst(_base.BaseEstimator):
     parameters
     ------------
     model : Sklrean ML class, 
-        Sklearn ML model to build aN ERC ensemble model.
+        Sklearn ML model to build a SST ensemble model.
     
     cv : int, default=3,
         The number of folds (disjoint parts) for 
