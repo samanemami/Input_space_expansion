@@ -18,6 +18,7 @@ class erc(_base.BaseEstimator):
                  seed,
                  chain=1,
                  ):
+
         super().__init__(model=model,
                          cv=cv,
                          direct=direct,
@@ -34,7 +35,6 @@ class erc(_base.BaseEstimator):
         The number of Ensemble chains.
         If the chain is equal to 1, the model 
         returns the RC model.
-
 
     """
 
@@ -60,21 +60,20 @@ class erc(_base.BaseEstimator):
             # Save the trained model as a binary object in the NumPy array
             exec(f'models[perm, 0] = model_{perm}')
 
-            if not self.direct:
+            for (train_index, test_index) in kfold.split(X, y):
+                x_train, x_test = X[train_index], X[test_index]
+                y_train, y_test = y[train_index], y[test_index]
 
-                for (train_index, test_index) in kfold.split(X, y):
-                    x_train, x_test = X[train_index], X[test_index]
-                    y_train, y_test = y[train_index], y[test_index]
+                model_ = clone(self.model)
+                model_.fit(x_train, y_train[:, perm])
 
-                    model_ = clone(self.model)
-                    model_.fit(x_train, y_train[:, perm])
-
-                    # meta-variable generation
+                # meta-variable generation
+                if not self.direct:
                     pred[test_index, perm] = model_.predict(x_test)
+                else:
+                    pred[train_index, perm] = model_.predict(x_train)
 
-                X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
-            else:
-                pred[:, perm] = models[perm, 0].predict(X)
+            X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
 
         return models
 
@@ -142,25 +141,24 @@ class sst(_base.BaseEstimator):
             exec(f'model_{i} = clone(self.model)')
             exec(f'self.models[i, 0] = model_{i}.fit(X, y[:, i])')
 
-            if not self.direct:
-                # Returns the cv model
+            for (train_index, test_index) in (kfold.split(X, y)):
 
-                for (train_index, test_index) in (kfold.split(X, y)):
+                x_train, x_test = X[train_index], X[test_index]
+                y_train, y_test = y[train_index], y[test_index]
 
-                    x_train, x_test = X[train_index], X[test_index]
-                    y_train, y_test = y[train_index], y[test_index]
+                model = clone(self.model)
 
-                    model = clone(self.model)
-                    model.fit(x_train, y_train[:, i])
+                model.fit(x_train, y_train[:, i])
 
-                    # meta-variable generation
+                # meta-variable generation
+                if not self.direct:
+                    # Returns the cv model
                     pred[test_index, i] = model.predict(x_test)
+                else:
+                    # Returns the true model
+                    pred[train_index, i] = model.predict(x_train)
 
-                self.score_ = mean_squared_error(y, pred)
-
-            else:
-                # Returns the true model
-                pred[:, i] = self.models[i, 0].predict(X)
+            self.score_ = mean_squared_error(y, pred)
 
         # 2nd training stage
         for i in range(self.n):
