@@ -13,35 +13,28 @@ class erc(_base.BaseEstimator):
     def __init__(self,
                  *,
                  model,
-                 cv=3,
+                 cv,
+                 direct,
+                 seed,
                  chain=1,
-                 seed=1,
                  ):
+        super().__init__(model=model,
+                         cv=cv,
+                         direct=direct,
+                         seed=seed)
 
-        self.model = model
-        self.cv = cv
         self.chain = chain
-        self.seed = seed
 
     """ Ensemble of Regressor Chains
 
 
     parameters
     ------------
-    model : Sklrean ML class, 
-        Sklearn ML model to build an ERC ensemble model.
-    
-    cv : int, default=3,
-        The number of folds (disjoint parts) for 
-        the KFold cross-validation.
-    
     chain : int, default=1,
         The number of Ensemble chains.
         If the chain is equal to 1, the model 
         returns the RC model.
-    
-    seed : int, default=1,
-        Seed value to generate a random number.
+
 
     """
 
@@ -67,17 +60,21 @@ class erc(_base.BaseEstimator):
             # Save the trained model as a binary object in the NumPy array
             exec(f'models[perm, 0] = model_{perm}')
 
-            for (train_index, test_index) in kfold.split(X, y):
-                x_train, x_test = X[train_index], X[test_index]
-                y_train, y_test = y[train_index], y[test_index]
+            if not self.direct:
 
-                model_ = clone(self.model)
-                model_.fit(x_train, y_train[:, perm])
+                for (train_index, test_index) in kfold.split(X, y):
+                    x_train, x_test = X[train_index], X[test_index]
+                    y_train, y_test = y[train_index], y[test_index]
 
-                # meta-variable generation
-                pred[test_index, perm] = model_.predict(x_test)
+                    model_ = clone(self.model)
+                    model_.fit(x_train, y_train[:, perm])
 
-            X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
+                    # meta-variable generation
+                    pred[test_index, perm] = model_.predict(x_test)
+
+                X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
+            else:
+                pred[:, perm] = models[perm, 0].predict(X)
 
         return models
 
@@ -115,29 +112,16 @@ class sst(_base.BaseEstimator):
     def __init__(self,
                  *,
                  model,
-                 cv=3,
-                 seed=1,
+                 cv,
+                 direct,
+                 seed
                  ):
+        super().__init__(model=model,
+                         cv=cv,
+                         direct=direct,
+                         seed=seed)
 
-        self.model = model
-        self.cv = cv
-        self.seed = seed
-
-    """ Stacked single-target
-
-    parameters
-    ------------
-    model : Sklrean ML class, 
-        Sklearn ML model to build a SST ensemble model.
-    
-    cv : int, default=3,
-        The number of folds (disjoint parts) for 
-        the KFold cross-validation.
-    
-    seed : int, default=1,
-        Seed value to generate a random number.
-
-    """
+    """ Stacked single-target"""
 
     def fit(self, X, y):
 
@@ -158,18 +142,25 @@ class sst(_base.BaseEstimator):
             exec(f'model_{i} = clone(self.model)')
             exec(f'self.models[i, 0] = model_{i}.fit(X, y[:, i])')
 
-            for (train_index, test_index) in (kfold.split(X, y)):
+            if not self.direct:
+                # Returns the cv model
 
-                x_train, x_test = X[train_index], X[test_index]
-                y_train, y_test = y[train_index], y[test_index]
+                for (train_index, test_index) in (kfold.split(X, y)):
 
-                model = clone(self.model)
-                model.fit(x_train, y_train[:, i])
+                    x_train, x_test = X[train_index], X[test_index]
+                    y_train, y_test = y[train_index], y[test_index]
 
-                # meta-variable generation
-                pred[test_index, i] = model.predict(x_test)
+                    model = clone(self.model)
+                    model.fit(x_train, y_train[:, i])
 
-        self.score_ = mean_squared_error(y, pred)
+                    # meta-variable generation
+                    pred[test_index, i] = model.predict(x_test)
+
+                self.score_ = mean_squared_error(y, pred)
+
+            else:
+                # Returns the true model
+                pred[:, i] = self.models[i, 0].predict(X)
 
         # 2nd training stage
         for i in range(self.n):

@@ -3,8 +3,41 @@ from abc import abstractmethod
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-class BaseEstimator:
-    """Base class for SST and ERC."""
+class BaseEstimator():
+    """Abstract base class for SST and ERC."""
+
+    @abstractmethod
+    def __init__(self,
+                 *,
+                 model,
+                 cv=3,
+                 direct=False,
+                 seed=1
+                 ):
+
+        self.model = model
+        self.cv = cv
+        self.direct = direct
+        self.seed = seed
+
+        """    
+        parameters
+        ------------
+        model : Sklrean ML class, 
+            Sklearn ML model to build a SST ensemble model.
+        
+        cv : int, default=3,
+            The number of folds (disjoint parts) for 
+            the KFold cross-validation.
+        
+        seed : int, default=1,
+            Seed value to generate a random number.
+
+        direct= bool, default=False,
+            If False, returns the cv model.
+            If True, returns the direct adaptations
+            
+        """
 
     @abstractmethod
     def fit(self, X, y):
