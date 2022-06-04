@@ -61,6 +61,6 @@ class BaseEstimator():
 
         # Returns Average of Relative Root Mean Squared Error
         pred = self.predict(X)
-        score = r2_score(y, pred)
+        score = r2_score(y_true=y, y_pred=pred, multioutput='raw_values')
 
         return np.sqrt(np.abs(1-score))
