@@ -112,7 +112,9 @@ class erc(_base.BaseEstimator):
                     break
             pred += pred_
 
-        return (pred_)/(self.n)
+        # The final prediction is equal to the 
+        #   mean of the k chains for each target.
+        return (pred)/(self.chain)
 
     def _get_permutation(self):
         return self.permutation
