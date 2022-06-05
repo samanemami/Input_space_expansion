@@ -92,8 +92,8 @@ class erc(_base.BaseEstimator):
         self.permutation = np.zeros(
             (self.n, self.chain), dtype=np.int32)
         for chain in range(self.chain):
-            if self.verbose:
-                self.ProgressBar((chain/self.chain)+0.1, self.chain)
+            if self.verbose and self.chain > 1:
+                self.ProgressBar((chain/np.abs(self.chain-1)), self.chain)
             self.permutation[:, chain] = np.random.permutation(self.n)
             self.chains.append(copy.deepcopy(self._fit_chain(X, y, chain)))
         return self

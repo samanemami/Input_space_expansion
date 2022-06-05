@@ -21,6 +21,7 @@ class BaseEstimator():
         self.cv = cv
         self.direct = direct
         self.seed = seed
+        self.verbose = verbose
 
         """    
         parameters
@@ -75,5 +76,5 @@ class BaseEstimator():
                 progress += "="
             else:
                 progress += " "
-        sys.stdout.write("[ %s ] %.0f%%" % (progress, percent * 100))
+        sys.stdout.write("[ %s ] %.2f%%" % (progress, percent * 100))
         sys.stdout.flush()

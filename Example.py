@@ -1,3 +1,4 @@
+#%%
 import warnings
 from Multi_target import sst, erc
 from sklearn.datasets import make_regression
@@ -20,7 +21,8 @@ def sst_():
     model = sst(model=base_model,
                 cv=2,
                 seed=1,
-                direct=False
+                direct=False,
+                verbose=True
                 )
     model.fit(x_train, y_train)
 
@@ -32,7 +34,8 @@ def erc_():
                 cv=2,
                 chain=3,
                 seed=1,
-                direct=False
+                direct=False,
+                verbose=True
                 )
     model.fit(x_train, y_train)
 
@@ -40,10 +43,10 @@ def erc_():
 
 
 if __name__ == "__main__":
-    model = sst_()
-    print("\n", "RMSE_SST: \n", model.score(x_test, y_test))
+    # model = sst_()
+    # print("\n", "RMSE_SST: \n", model.score(x_test, y_test))
 
-    print("---------")
+    # print("---------")
 
     model = erc_()
     print("\n", "RMSE_ERC: \n", model.score(x_test, y_test))
