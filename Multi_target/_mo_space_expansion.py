@@ -3,6 +3,7 @@
 
 import copy
 import random
+from tabnanny import verbose
 import numpy as np
 from Base import _base
 from sklearn.base import clone
@@ -17,13 +18,15 @@ class erc(_base.BaseEstimator):
                  cv,
                  direct,
                  seed,
+                 verbose,
                  chain=1,
                  ):
 
         super().__init__(model=model,
                          cv=cv,
                          direct=direct,
-                         seed=seed)
+                         seed=seed,
+                         verbose=verbose)
 
         self.chain = chain
 
@@ -89,6 +92,8 @@ class erc(_base.BaseEstimator):
         self.permutation = np.zeros(
             (self.n, self.chain), dtype=np.int32)
         for chain in range(self.chain):
+            if self.verbose:
+                self.ProgressBar((chain/self.chain)+0.1, self.chain)
             self.permutation[:, chain] = np.random.permutation(self.n)
             self.chains.append(copy.deepcopy(self._fit_chain(X, y, chain)))
         return self
@@ -119,12 +124,14 @@ class sst(_base.BaseEstimator):
                  model,
                  cv,
                  direct,
-                 seed
+                 seed,
+                 verbose
                  ):
         super().__init__(model=model,
                          cv=cv,
                          direct=direct,
-                         seed=seed)
+                         seed=seed,
+                         verbose=verbose)
 
     """ Stacked single-target"""
 
@@ -168,6 +175,8 @@ class sst(_base.BaseEstimator):
 
         # 2nd training stage
         for i in range(self.n):
+            if self.verbose:
+                self.ProgressBar((i/self.n)+0.1, self.n)
             XX = np.append(X, np.delete(pred, i, 1), axis=1)
             exec(f'model_{i} = clone(self.model)')
             exec(f'self.models[i, 1] = model_{i}.fit(XX, y[:, i])')

@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from abc import abstractmethod
 from sklearn.metrics import mean_squared_error, r2_score
@@ -12,7 +13,8 @@ class BaseEstimator():
                  model,
                  cv=3,
                  direct=False,
-                 seed=1
+                 seed=1,
+                 verbose=True
                  ):
 
         self.model = model
@@ -64,3 +66,14 @@ class BaseEstimator():
         score = r2_score(y_true=y, y_pred=pred, multioutput='raw_values')
 
         return np.sqrt(np.abs(1-score))
+
+    def ProgressBar(self, percent, barLen=20):
+        sys.stdout.write("\r")
+        progress = ""
+        for i in range(barLen):
+            if i < int(barLen * percent):
+                progress += "="
+            else:
+                progress += " "
+        sys.stdout.write("[ %s ] %.0f%%" % (progress, percent * 100))
+        sys.stdout.flush()
