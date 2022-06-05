@@ -50,7 +50,7 @@ class erc(_base.BaseEstimator):
 
         pred = np.zeros_like(y)
 
-        models = np.empty((self.n, 1), dtype=object)
+        models = np.empty((self.n,), dtype=object)
         permutation = self.permutation[:, chain]
 
         for i, perm in enumerate(permutation):
@@ -59,7 +59,7 @@ class erc(_base.BaseEstimator):
             exec(f'model_{perm} = clone(self.model)')
             exec(f'model_{perm}.fit(X, y[:, perm])')
             # Save the trained model as a binary object in the NumPy array
-            exec(f'models[perm, 0] = model_{perm}')
+            exec(f'models[perm] = model_{perm}')
 
             if i+1 == len(permutation):
                 break
@@ -105,7 +105,7 @@ class erc(_base.BaseEstimator):
             permutation = self.permutation[:, i]
             XX = X
             for p, perm in enumerate(permutation):
-                model = chain[perm][0]
+                model = chain[perm]
                 pred_[:, perm] = model.predict(XX)
                 XX = np.append(XX, pred_[:, perm][:, np.newaxis], axis=1)
                 if p+1 == len(permutation):
