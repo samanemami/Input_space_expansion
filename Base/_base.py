@@ -36,9 +36,12 @@ class BaseEstimator():
         seed : int, default=1,
             Seed value to generate a random number.
 
-        direct= bool, default=False,
+        direct : bool, default=False,
             If False, returns the cv model.
             If True, returns the direct adaptations
+
+        verbose : bool, default=True,
+            Returns the verbosity
             
         """
 
