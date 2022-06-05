@@ -175,8 +175,8 @@ class sst(_base.BaseEstimator):
 
         # 2nd training stage
         for i in range(self.n):
-            if self.verbose:
-                self.ProgressBar((i/self.n)+0.1, self.n)
+            if self.verbose and self.n > 1:
+                self.ProgressBar((i/np.abs((self.n)-1)), self.n)
             XX = np.append(X, np.delete(pred, i, 1), axis=1)
             exec(f'model_{i} = clone(self.model)')
             exec(f'self.models[i, 1] = model_{i}.fit(XX, y[:, i])')
