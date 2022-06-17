@@ -4,10 +4,12 @@
 import copy
 import random
 import numpy as np
+import pandas as pd
 from Base import _base
+from topsis import topsis
 from sklearn.base import clone
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 class erc(_base.BaseEstimator):
@@ -40,6 +42,28 @@ class erc(_base.BaseEstimator):
         returns the RC model.
 
     """
+
+    def _rank(self, permutation, pred, y):
+
+        # ranking and change the order of the permutation
+        scores = np.zeros((permutation.shape[1], 2))
+        for i in permutation:
+            scores[i, 0] = mean_squared_error(
+                y[:, i], pred[:, i], squared=False)
+            scores[i, 1] = np.sqrt(
+                np.abs(1-(r2_score(y[:, i], pred[:, i]))))
+
+        # Build the decision_matrix
+        dm = pd.DataFrame(data=scores, index=permutation,
+                          columns=["RMSE", "RRMSE"])
+
+        impact = ['-', '-']
+        weight = np.array([0.5, 0.5])
+
+        tp = topsis(decision_matrix=dm,
+                    weight=weight, impact=impact)
+
+        return tp.rank()
 
     def _fit_chain(self, X, y, chain):
 
@@ -111,7 +135,7 @@ class erc(_base.BaseEstimator):
                     break
             pred += pred_
 
-        # The final prediction is equal to the 
+        # The final prediction is equal to the
         #   mean of the k chains for each target.
         return (pred)/(self.chain)
 
