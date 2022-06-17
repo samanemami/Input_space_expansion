@@ -1,3 +1,4 @@
+
 import warnings
 from Multi_target import sst, erc
 from sklearn.datasets import make_regression
@@ -21,7 +22,8 @@ model = erc(model=base_model,
             chain=3,
             seed=1,
             direct=False,
-            verbose=True
+            verbose=False,
+            ranking=True
             )
 model.fit(x_train, y_train)
 

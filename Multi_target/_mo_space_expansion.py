@@ -5,14 +5,14 @@ import copy
 import random
 import numpy as np
 import pandas as pd
-from Base import _base
 from topsis import topsis
 from sklearn.base import clone
+from Base._base import BaseEstimator
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error, r2_score
 
 
-class erc(_base.BaseEstimator):
+class erc(BaseEstimator):
     def __init__(self,
                  *,
                  model,
@@ -21,6 +21,7 @@ class erc(_base.BaseEstimator):
                  seed,
                  verbose,
                  chain=1,
+                 ranking=False,
                  ):
 
         super().__init__(model=model,
@@ -30,6 +31,7 @@ class erc(_base.BaseEstimator):
                          verbose=verbose)
 
         self.chain = chain
+        self.ranking = ranking
 
     """ Ensemble of Regressor Chains
 
@@ -40,13 +42,18 @@ class erc(_base.BaseEstimator):
         The number of Ensemble chains.
         If the chain is equal to 1, the model 
         returns the RC model.
+    ranking : bool, default=False,
+        Determines the use of the ranking 
+        method in the permutation.
+        
 
     """
 
+    @BaseEstimator.trackcalls
     def _rank(self, permutation, pred, y):
 
         # ranking and change the order of the permutation
-        scores = np.zeros((permutation.shape[1], 2))
+        scores = np.zeros((len(permutation), 2))
         for i in permutation:
             scores[i, 0] = mean_squared_error(
                 y[:, i], pred[:, i], squared=False)
@@ -63,7 +70,7 @@ class erc(_base.BaseEstimator):
         tp = topsis(decision_matrix=dm,
                     weight=weight, impact=impact)
 
-        return tp.rank()
+        return tp.rank().similarity
 
     def _fit_chain(self, X, y, chain):
 
@@ -102,7 +109,10 @@ class erc(_base.BaseEstimator):
 
             X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
 
-        return models
+        if self.ranking:
+            permutation = self._rank(permutation, pred, y)
+
+        return models, permutation
 
     def fit(self, X, y):
 
@@ -118,7 +128,12 @@ class erc(_base.BaseEstimator):
             if self.verbose and self.chain > 1:
                 self.ProgressBar((chain/np.abs(self.chain-1)), self.chain)
             self.permutation[:, chain] = np.random.permutation(self.n)
-            self.chains.append(copy.deepcopy(self._fit_chain(X, y, chain)))
+            model, permutation = copy.deepcopy(self._fit_chain(X, y, chain))
+            self.chains.append(model)
+            if self._rank.called:
+                self.permutation[:, chain] = permutation
+            else:
+                pass
         return self
 
     def predict(self, X):
@@ -143,7 +158,7 @@ class erc(_base.BaseEstimator):
         return self.permutation
 
 
-class sst(_base.BaseEstimator):
+class sst(BaseEstimator):
     def __init__(self,
                  *,
                  model,
