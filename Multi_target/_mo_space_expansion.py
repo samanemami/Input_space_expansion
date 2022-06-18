@@ -1,10 +1,8 @@
 # Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
-from cProfile import label
 import copy
 import random
-from turtle import color
 import numpy as np
 import pandas as pd
 from topsis import topsis

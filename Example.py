@@ -31,11 +31,13 @@ def sst_():
 def erc_():
     model = erc(model=base_model,
                 cv=2,
-                chain=10,
+                chain=3,
                 seed=1,
                 direct=False,
-                verbose=True
+                verbose=True,
+                ranking=False
                 )
+
     model.fit(x_train, y_train)
 
     return model
