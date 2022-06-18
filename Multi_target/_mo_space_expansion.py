@@ -1,8 +1,10 @@
 # Author: Seyedsaman Emami
 # Licence: GNU Lesser General Public License v2.1 (LGPL-2.1)
 
+from cProfile import label
 import copy
 import random
+from turtle import color
 import numpy as np
 import pandas as pd
 from topsis import topsis
@@ -50,24 +52,14 @@ class erc(BaseEstimator):
     """
 
     @BaseEstimator.trackcalls
-    def _rank(self, permutation, pred, y):
+    def _rank(self):
 
         # ranking and change the order of the permutation
-        scores = np.zeros((len(permutation), 2))
-        for i in permutation:
-            scores[i, 0] = mean_squared_error(
-                y[:, i], pred[:, i], squared=False)
-            scores[i, 1] = np.sqrt(
-                np.abs(1-(r2_score(y[:, i], pred[:, i]))))
-
-        # Build the decision_matrix
-        dm = pd.DataFrame(data=scores, index=permutation,
-                          columns=["RMSE", "RRMSE"])
 
         impact = ['-', '-']
         weight = np.array([0.5, 0.5])
 
-        tp = topsis(decision_matrix=dm,
+        tp = topsis(decision_matrix=self.dm,
                     weight=weight, impact=impact)
 
         return tp.rank().similarity
@@ -91,9 +83,6 @@ class erc(BaseEstimator):
             # Save the trained model as a binary object in the NumPy array
             exec(f'models[perm] = model_{perm}')
 
-            if i+1 == len(permutation):
-                break
-
             for (train_index, test_index) in kfold.split(X, y):
                 x_train, x_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
@@ -107,12 +96,23 @@ class erc(BaseEstimator):
                 else:
                     pred[train_index, perm] = model_.predict(x_train)
 
+            if i+1 == len(permutation):
+                break
+
             X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
 
-        if self.ranking:
-            permutation = self._rank(permutation, pred, y)
+        scores = np.zeros((len(permutation), 2))
+        for i in permutation:
+            scores[i, 0] = mean_squared_error(
+                y[:, i], pred[:, i], squared=False)
+            scores[i, 1] = np.sqrt(
+                np.abs(1-(r2_score(y[:, i], pred[:, i]))))
 
-        return models, permutation
+        # Build the decision_matrix
+        self.dm = pd.DataFrame(data=scores, index=permutation,
+                               columns=["RMSE", "RRMSE"])
+
+        return models
 
     def fit(self, X, y):
 
@@ -128,12 +128,16 @@ class erc(BaseEstimator):
             if self.verbose and self.chain > 1:
                 self.ProgressBar((chain/np.abs(self.chain-1)), self.chain)
             self.permutation[:, chain] = np.random.permutation(self.n)
-            model, permutation = copy.deepcopy(self._fit_chain(X, y, chain))
-            self.chains.append(model)
+            if self.ranking:
+                copy.deepcopy(self._fit_chain(X, y, chain))
+                # Reordering the permutation
+                self.permutation[:, chain] = self._rank()
+                dm = self.dm
+            self.chains.append(copy.deepcopy(self._fit_chain(X, y, chain)))
+            # Debugging
             if self._rank.called:
-                self.permutation[:, chain] = permutation
-            else:
-                pass
+                improvment = pd.DataFrame([self.dm.loc[i] - dm.loc[i]
+                                           for i in self.dm.index])
         return self
 
     def predict(self, X):
