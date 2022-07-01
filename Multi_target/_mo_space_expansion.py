@@ -5,7 +5,6 @@ import copy
 import random
 import numpy as np
 import pandas as pd
-from topsis import topsis
 from sklearn.base import clone
 from Base._base import BaseEstimator
 from sklearn.model_selection import KFold
@@ -20,8 +19,7 @@ class erc(BaseEstimator):
                  direct,
                  seed,
                  verbose,
-                 chain=1,
-                 ranking=False,
+                 chain=1
                  ):
 
         super().__init__(model=model,
@@ -31,7 +29,6 @@ class erc(BaseEstimator):
                          verbose=verbose)
 
         self.chain = chain
-        self.ranking = ranking
 
     """ Ensemble of Regressor Chains
 
@@ -48,19 +45,6 @@ class erc(BaseEstimator):
         
 
     """
-
-    @BaseEstimator.trackcalls
-    def _rank(self):
-
-        # ranking and change the order of the permutation
-
-        impact = ['-', '-']
-        weight = np.array([0.5, 0.5])
-
-        tp = topsis(decision_matrix=self.dm,
-                    weight=weight, impact=impact)
-
-        return tp.rank().similarity
 
     def _fit_chain(self, X, y, chain):
 
@@ -99,22 +83,12 @@ class erc(BaseEstimator):
 
             X = np.append(X, pred[:, perm][:, np.newaxis], axis=1)
 
-        scores = np.zeros((len(permutation), 2))
-        for i in permutation:
-            scores[i, 0] = mean_squared_error(
-                y[:, i], pred[:, i], squared=False)
-            scores[i, 1] = np.sqrt(
-                np.abs(1-(r2_score(y[:, i], pred[:, i]))))
-
-        # Build the decision_matrix
-        self.dm = pd.DataFrame(data=scores, index=permutation,
-                               columns=["RMSE", "RRMSE"])
-
         return models
 
     def fit(self, X, y):
-
-        n = random.randint(0, 100)
+        
+        choices = list(range(self.chain * 10))
+        n = random.randint(0, random.choice(choices))
         np.random.seed(n)
 
         self.n = y.shape[1]
@@ -126,16 +100,8 @@ class erc(BaseEstimator):
             if self.verbose and self.chain > 1:
                 self.ProgressBar((chain/np.abs(self.chain-1)), self.chain)
             self.permutation[:, chain] = np.random.permutation(self.n)
-            if self.ranking:
-                copy.deepcopy(self._fit_chain(X, y, chain))
-                # Reordering the permutation
-                self.permutation[:, chain] = self._rank()
-                dm = self.dm
             self.chains.append(copy.deepcopy(self._fit_chain(X, y, chain)))
-            # Debugging
-            if self._rank.called:
-                improvment = pd.DataFrame([self.dm.loc[i] - dm.loc[i]
-                                           for i in self.dm.index])
+
         return self
 
     def predict(self, X):

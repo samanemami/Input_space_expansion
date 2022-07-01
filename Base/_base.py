@@ -1,5 +1,4 @@
 import sys
-import functools
 import numpy as np
 from abc import abstractmethod
 from sklearn.metrics import mean_squared_error, r2_score
@@ -82,12 +81,3 @@ class BaseEstimator():
                 progress += " "
         sys.stdout.write("[ %s ] %.2f%%" % (progress, percent * 100))
         sys.stdout.flush()
-
-    def trackcalls(func):
-        # Check if the function is called.
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            wrapper.called = True
-            return func(*args, **kwargs)
-        wrapper.called = False
-        return wrapper

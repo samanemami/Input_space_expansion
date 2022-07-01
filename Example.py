@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 warnings.simplefilter("ignore")
 
-X, y = make_regression(n_targets=5, n_samples=700)
+X, y = make_regression(n_targets=5, n_samples=200)
 
 x_train, x_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=1)
@@ -35,7 +35,6 @@ def erc_():
                 seed=1,
                 direct=False,
                 verbose=True,
-                ranking=False
                 )
 
     model.fit(x_train, y_train)
