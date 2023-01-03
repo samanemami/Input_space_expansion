@@ -55,7 +55,7 @@ class BaseEstimator():
         "To return the predicted values"
 
     def score(self, X, y):
-        # Returns RMSE of each target
+        '''Returns RMSE of each target'''
         pred = self.predict(X)
         score = mean_squared_error(y_true=y,
                                    y_pred=pred,
