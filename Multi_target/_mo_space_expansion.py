@@ -4,11 +4,10 @@
 import copy
 import random
 import numpy as np
-import pandas as pd
 from sklearn.base import clone
 from Base._base import BaseEstimator
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
 
 
 class erc(BaseEstimator):
@@ -39,11 +38,6 @@ class erc(BaseEstimator):
         The number of Ensemble chains.
         If the chain is equal to 1, the model 
         returns the RC model.
-    ranking : bool, default=False,
-        Determines the use of the ranking 
-        method in the permutation.
-        
-
     """
 
     def _fit_chain(self, X, y, chain):
